@@ -131,6 +131,85 @@ function wkey(ws) { return ws.toISOString().slice(0, 10); }
 const DAYS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
 // ── Main App ────────────────────────────────────────────────────
+// ── Onboard Form (isolated to prevent re-renders during typing) ──
+const OnboardForm = memo(({ onSubmit }) => {
+  const [info, setInfo] = useState({ name: "", age: "", gender: "男", height: "", weight: "", bodyFat: "", experience: "新手（0-1年）", goal: "", photo: null });
+  const iStyle = { width: "100%", padding: "12px 14px", borderRadius: 12, border: "1.5px solid rgba(255,255,255,0.15)", fontSize: 15, background: "rgba(0,0,0,0.3)", color: "white" };
+  const gBtn = { padding: "14px", borderRadius: 16, border: "none", cursor: "pointer", background: "linear-gradient(135deg,#FFD700,#FF9500)", color: "#001F3F", fontSize: 15, fontWeight: "700", width: "100%" };
+  const card = { background: "rgba(255,255,255,0.07)", backdropFilter: "blur(20px)", borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)" };
+  const canSubmit = info.age && info.height && info.weight && info.goal;
+  return (
+    <div style={{ padding: "30px 20px 20px" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 30 }}>
+        <SpongeBob size={90} animate />
+        <div style={{ fontSize: 26, fontWeight: "700", color: "#FFD700", marginTop: 12 }}>比奇堡健身房</div>
+        <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>告诉我你的身体信息，AI为你定制专属方案</div>
+      </div>
+      <div style={{ ...card, padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+        <div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>昵称（可选）</div>
+          <input placeholder="你叫什么名字？" value={info.name} onChange={e => setInfo(p => ({ ...p, name: e.target.value }))} style={iStyle} />
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>性别</div>
+            <select value={info.gender} onChange={e => setInfo(p => ({ ...p, gender: e.target.value }))} style={{ ...iStyle, appearance: "none" }}>
+              <option value="男">男</option><option value="女">女</option>
+            </select>
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>年龄</div>
+            <input type="number" placeholder="如 24" value={info.age} onChange={e => setInfo(p => ({ ...p, age: e.target.value }))} style={iStyle} />
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>身高 (cm)</div>
+            <input type="number" placeholder="如 178" value={info.height} onChange={e => setInfo(p => ({ ...p, height: e.target.value }))} style={iStyle} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>体重 (kg)</div>
+            <input type="number" placeholder="如 79" value={info.weight} onChange={e => setInfo(p => ({ ...p, weight: e.target.value }))} style={iStyle} />
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 10 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>体脂率（可选）</div>
+            <input type="number" placeholder="如 23" value={info.bodyFat} onChange={e => setInfo(p => ({ ...p, bodyFat: e.target.value }))} style={iStyle} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>健身经验</div>
+            <select value={info.experience} onChange={e => setInfo(p => ({ ...p, experience: e.target.value }))} style={{ ...iStyle, appearance: "none" }}>
+              <option value="新手（0-1年）">新手（0-1年）</option>
+              <option value="初级（1-2年）">初级（1-2年）</option>
+              <option value="中级（2-4年）">中级（2-4年）</option>
+              <option value="高级（4年以上）">高级（4年以上）</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>健身目标</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {["减脂塑形", "增肌增重", "增肌减脂", "提升力量", "保持健康"].map(g => (
+              <button key={g} onClick={() => setInfo(p => ({ ...p, goal: g }))} style={{ padding: "7px 14px", borderRadius: 20, border: info.goal === g ? "1.5px solid #FFD700" : "1.5px solid rgba(255,255,255,0.2)", cursor: "pointer", background: info.goal === g ? "rgba(255,215,0,0.2)" : "rgba(255,255,255,0.07)", color: info.goal === g ? "#FFD700" : "rgba(255,255,255,0.7)", fontSize: 13 }}>{g}</button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>身材照片（可选，AI会分析体型）</div>
+          <label style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, border: "1.5px dashed rgba(255,255,255,0.2)", cursor: "pointer", background: "rgba(255,255,255,0.05)" }}>
+            <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = ev => setInfo(p => ({ ...p, photo: ev.target.result })); r.readAsDataURL(f); } }} />
+            {info.photo ? (<><img src={info.photo} style={{ width: 48, height: 48, borderRadius: 10, objectFit: "cover" }} alt="" /><span style={{ fontSize: 13, color: "#FFD700" }}>照片已上传 ✓</span></>) : (<><div style={{ width: 48, height: 48, borderRadius: 10, background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>📷</div><span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>点击上传身材照片</span></>)}
+          </label>
+        </div>
+        <button onClick={() => canSubmit && onSubmit(info)} disabled={!canSubmit} style={{ ...gBtn, marginTop: 6, opacity: canSubmit ? 1 : 0.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          <SpongeBob size={28} />AI 生成我的专属方案
+        </button>
+      </div>
+    </div>
+  );
+});
+
 export default function App() {
   // Global state
   const [screen, setScreen] = useState("onboard"); // onboard | analyzing | refine | main
@@ -197,22 +276,24 @@ export default function App() {
   }
 
   // ── ONBOARDING: Analyze & Generate Plan ─────────────────────
-  async function generatePlan() {
+  async function generatePlan(info) {
+    const u = info || userInfo;
+    setUserInfo(u);
     setAnalyzing(true);
     setScreen("analyzing");
     try {
-      const photoNote = userInfo.photo ? "用户上传了身材照片，请在分析中提及照片显示的体型特征。" : "";
+      const photoNote = u.photo ? "用户上传了身材照片，请在分析中提及照片显示的体型特征。" : "";
       const prompt = `你是专业健身教练AI。请根据以下用户信息生成个性化健身和饮食方案。
 
 用户信息：
-- 姓名：${userInfo.name || "用户"}
-- 性别：${userInfo.gender}
-- 年龄：${userInfo.age}岁
-- 身高：${userInfo.height}cm
-- 体重：${userInfo.weight}kg
-- 体脂率：${userInfo.bodyFat ? userInfo.bodyFat + "%" : "未知"}
-- 健身经验：${userInfo.experience}
-- 目标：${userInfo.goal}
+- 姓名：${u.name || "用户"}
+- 性别：${u.gender}
+- 年龄：${u.age}岁
+- 身高：${u.height}cm
+- 体重：${u.weight}kg
+- 体脂率：${u.bodyFat ? u.bodyFat + "%" : "未知"}
+- 健身经验：${u.experience}
+- 目标：${u.goal}
 ${photoNote}
 
 请严格按照以下JSON格式返回，不要有任何其他文字，不要有markdown代码块：
@@ -474,91 +555,7 @@ sets必须是数字`;
   // ══════════════════════════════════════════════════════════════
   if (screen === "onboard") return (
     <BgLayout>
-      <div style={{ padding: "30px 20px 20px", animation: "riseUp 0.4s ease both" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 30 }}>
-          <SpongeBob size={90} animate />
-          <div style={{ fontSize: 26, fontWeight: "700", color: "#FFD700", marginTop: 12, letterSpacing: -0.5 }}>比奇堡健身房</div>
-          <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 6 }}>告诉我你的身体信息，AI为你定制专属方案</div>
-        </div>
-
-        <div style={{ ...cardStyle, padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
-          <div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>昵称（可选）</div>
-            <input placeholder="你叫什么名字？" value={userInfo.name} onChange={e => setUserInfo(p => ({ ...p, name: e.target.value }))} style={inputStyle} />
-          </div>
-
-          <div style={{ display: "flex", gap: 10 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>性别</div>
-              <select value={userInfo.gender} onChange={e => setUserInfo(p => ({ ...p, gender: e.target.value }))} style={{ ...inputStyle, appearance: "none" }}>
-                <option value="男">男</option>
-                <option value="女">女</option>
-              </select>
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>年龄</div>
-              <input type="number" placeholder="如 24" value={userInfo.age} onChange={e => setUserInfo(p => ({ ...p, age: e.target.value }))} style={inputStyle} />
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: 10 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>身高 (cm)</div>
-              <input type="number" placeholder="如 178" value={userInfo.height} onChange={e => setUserInfo(p => ({ ...p, height: e.target.value }))} style={inputStyle} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>体重 (kg)</div>
-              <input type="number" placeholder="如 79" value={userInfo.weight} onChange={e => setUserInfo(p => ({ ...p, weight: e.target.value }))} style={inputStyle} />
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: 10 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>体脂率（可选）</div>
-              <input type="number" placeholder="如 23" value={userInfo.bodyFat} onChange={e => setUserInfo(p => ({ ...p, bodyFat: e.target.value }))} style={inputStyle} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>健身经验</div>
-              <select value={userInfo.experience} onChange={e => setUserInfo(p => ({ ...p, experience: e.target.value }))} style={{ ...inputStyle, appearance: "none" }}>
-                <option value="新手（0-1年）">新手（0-1年）</option>
-                <option value="初级（1-2年）">初级（1-2年）</option>
-                <option value="中级（2-4年）">中级（2-4年）</option>
-                <option value="高级（4年以上）">高级（4年以上）</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>健身目标</div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {["减脂塑形", "增肌增重", "增肌减脂", "提升力量", "保持健康"].map(g => (
-                <button key={g} onClick={() => setUserInfo(p => ({ ...p, goal: g }))} style={{ padding: "7px 14px", borderRadius: 20, border: userInfo.goal === g ? "1.5px solid #FFD700" : "1.5px solid rgba(255,255,255,0.2)", cursor: "pointer", background: userInfo.goal === g ? "rgba(255,215,0,0.2)" : "rgba(255,255,255,0.07)", color: userInfo.goal === g ? "#FFD700" : "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: userInfo.goal === g ? "600" : "400" }}>{g}</button>
-              ))}
-            </div>
-          </div>
-
-          {/* Photo upload */}
-          <div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>身材照片（可选，AI会分析体型）</div>
-            <label style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, border: "1.5px dashed rgba(255,255,255,0.2)", cursor: "pointer", background: "rgba(255,255,255,0.05)" }}>
-              <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => {
-                const f = e.target.files[0];
-                if (f) { const r = new FileReader(); r.onload = ev => setUserInfo(p => ({ ...p, photo: ev.target.result })); r.readAsDataURL(f); }
-              }} />
-              {userInfo.photo ? (
-                <><img src={userInfo.photo} style={{ width: 48, height: 48, borderRadius: 10, objectFit: "cover" }} alt="" /><span style={{ fontSize: 13, color: "#FFD700" }}>照片已上传 ✓</span></>
-              ) : (
-                <><div style={{ width: 48, height: 48, borderRadius: 10, background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>📷</div><span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>点击上传身材照片</span></>
-              )}
-            </label>
-          </div>
-
-          <button onClick={generatePlan} disabled={!userInfo.age || !userInfo.height || !userInfo.weight || !userInfo.goal}
-            style={{ ...goldBtn, marginTop: 6, opacity: (!userInfo.age || !userInfo.height || !userInfo.weight || !userInfo.goal) ? 0.5 : 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-            <SpongeBob size={28} />AI 生成我的专属方案
-          </button>
-        </div>
-      </div>
+      <OnboardForm onSubmit={(info) => { setUserInfo(info); setTimeout(() => generatePlan(info), 0); }} />
     </BgLayout>
   );
 
