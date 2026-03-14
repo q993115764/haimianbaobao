@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 // ── SVG Characters ─────────────────────────────────────────────
@@ -86,6 +86,28 @@ const Sandy = ({ size = 60, animate = false }) => (
   </svg>
 );
 
+// ── Timer Component (isolated to prevent full app re-renders) ──
+const Timer = memo(() => {
+  const [secs, setSecs] = useState(0);
+  const [running, setRunning] = useState(false);
+  const timerRef = useRef(null);
+  useEffect(() => {
+    if (running) timerRef.current = setInterval(() => setSecs(s => s + 1), 1000);
+    else clearInterval(timerRef.current);
+    return () => clearInterval(timerRef.current);
+  }, [running]);
+  const fmtT = s => { const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sc = s%60; return h>0?`${h}:${String(m).padStart(2,"0")}:${String(sc).padStart(2,"0")}`:`${String(m).padStart(2,"0")}:${String(sc).padStart(2,"0")}`; };
+  return (
+    <div style={{ textAlign: "right" }}>
+      <div style={{ fontSize: 22, fontWeight: "700", fontFamily: "monospace", color: "#FFD700" }}>{fmtT(secs)}</div>
+      <div style={{ display: "flex", gap: 5, marginTop: 4, justifyContent: "flex-end" }}>
+        <button onClick={() => setRunning(r => !r)} style={{ padding: "4px 10px", borderRadius: 18, border: "none", cursor: "pointer", fontWeight: "600", fontSize: 11, background: running ? "rgba(255,107,107,0.9)" : "rgba(90,185,90,0.9)", color: "white" }}>{running ? "⏸" : "▶"}</button>
+        <button onClick={() => { setSecs(0); setRunning(false); }} style={{ padding: "4px 8px", borderRadius: 18, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer", fontSize: 11, background: "rgba(255,255,255,0.1)", color: "white" }}>↺</button>
+      </div>
+    </div>
+  );
+});
+
 // ── API call ────────────────────────────────────────────────────
 async function callClaude(messages, system = "") {
   const body = { model: "claude-sonnet-4-20250514", max_tokens: 2000, messages };
@@ -123,8 +145,6 @@ export default function App() {
   const [logs, setLogs] = useState({}); // { weekKey: { dayIdx: { exId: { sets: [{w,r}] } } } }
   const [activeDay, setActiveDay] = useState(null);
   const [activeWorkout, setActiveWorkout] = useState(null);
-  const [running, setRunning] = useState(false);
-  const [secs, setSecs] = useState(0);
 
   const [chartEx, setChartEx] = useState("");
   const [drag, setDrag] = useState(null);
@@ -137,16 +157,10 @@ export default function App() {
   const [aiAnalysis, setAiAnalysis] = useState({});
   const [aiAnalysisLoading, setAiAnalysisLoading] = useState(false);
   const [aiSubTab, setAiSubTab] = useState("analysis");
-  const timerRef = useRef(null);
   const refineEndRef = useRef(null);
   const chatEndRef = useRef(null);
 
 
-  useEffect(() => {
-    if (running) timerRef.current = setInterval(() => setSecs(s => s + 1), 1000);
-    else clearInterval(timerRef.current);
-    return () => clearInterval(timerRef.current);
-  }, [running]);
   useEffect(() => { refineEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [refineMessages]);
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [aiChatMsgs]);
 
@@ -181,8 +195,6 @@ export default function App() {
     const prevWk = wkey(prevWs);
     return logs[prevWk]?.[di]?.[exId]?.[setIdx] || null;
   }
-
-  const fmtT = s => { const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sc = s % 60; return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${String(sc).padStart(2, "0")}` : `${String(m).padStart(2, "0")}:${String(sc).padStart(2, "0")}`; };
 
   // ── ONBOARDING: Analyze & Generate Plan ─────────────────────
   async function generatePlan() {
@@ -663,13 +675,7 @@ sets必须是数字`;
               <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>{new Date().toLocaleDateString('zh-CN', {year:'numeric',month:'long',day:'numeric',weekday:'long'})}</div>
             </div>
           </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 22, fontWeight: "700", fontFamily: "monospace", color: "#FFD700" }}>{fmtT(secs)}</div>
-            <div style={{ display: "flex", gap: 5, marginTop: 4, justifyContent: "flex-end" }}>
-              <button onClick={() => setRunning(r => !r)} style={{ padding: "4px 10px", borderRadius: 18, border: "none", cursor: "pointer", fontWeight: "600", fontSize: 11, background: running ? "rgba(255,107,107,0.9)" : "rgba(90,185,90,0.9)", color: "white" }}>{running ? "⏸" : "▶"}</button>
-              <button onClick={() => { setSecs(0); setRunning(false); }} style={{ padding: "4px 8px", borderRadius: 18, border: "1px solid rgba(255,255,255,0.2)", cursor: "pointer", fontSize: 11, background: "rgba(255,255,255,0.1)", color: "white" }}>↺</button>
-            </div>
-          </div>
+          <Timer />
         </div>
       </div>
 
