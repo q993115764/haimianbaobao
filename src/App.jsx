@@ -90,7 +90,7 @@ const Sandy = ({ size = 60, animate = false }) => (
 async function callClaude(messages, system = "") {
   const body = { model: "claude-sonnet-4-20250514", max_tokens: 2000, messages };
   if (system) body.system = system;
-  const r = await fetch("https://api.anthropic.com/v1/messages", {
+  const r = await fetch("/api/chat", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body)
   });
@@ -125,7 +125,7 @@ export default function App() {
   const [activeWorkout, setActiveWorkout] = useState(null);
   const [running, setRunning] = useState(false);
   const [secs, setSecs] = useState(0);
-  const [now, setNow] = useState(new Date());
+
   const [chartEx, setChartEx] = useState("");
   const [drag, setDrag] = useState(null);
   const [dragOver, setDragOver] = useState(null);
@@ -141,7 +141,7 @@ export default function App() {
   const refineEndRef = useRef(null);
   const chatEndRef = useRef(null);
 
-  useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
+
   useEffect(() => {
     if (running) timerRef.current = setInterval(() => setSecs(s => s + 1), 1000);
     else clearInterval(timerRef.current);
@@ -660,7 +660,7 @@ sets必须是数字`;
             <SpongeBob size={36} />
             <div>
               <div style={{ fontSize: 16, fontWeight: "700", color: "#FFD700" }}>{userInfo.name ? `${userInfo.name}的健身房` : "比奇堡健身房"}</div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>{now.getFullYear()}年{now.getMonth() + 1}月{now.getDate()}日 {DAYS[(now.getDay() + 6) % 7]} {String(now.getHours()).padStart(2, "0")}:{String(now.getMinutes()).padStart(2, "0")}:{String(now.getSeconds()).padStart(2, "0")}</div>
+              <div style={{ fontSize: 10, color: "rgba(255,255,255,0.55)" }}>{new Date().toLocaleDateString('zh-CN', {year:'numeric',month:'long',day:'numeric',weekday:'long'})}</div>
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
