@@ -643,7 +643,7 @@ sets必须是数字`;
   // ══════════════════════════════════════════════════════════════
   if (screen === "onboard") return (
     <BgLayout>
-      <OnboardForm onSubmit={(info) => { setUserInfo(info); setTimeout(() => generatePlan(info), 0); }} />
+      <OnboardForm onSubmit={(info) => generatePlan(info)} />
     </BgLayout>
   );
 
