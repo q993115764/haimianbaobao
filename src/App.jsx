@@ -259,7 +259,7 @@ const OnboardForm = memo(({ onSubmit }) => {
           </label>
           {photoError && <div style={{ marginTop: 6, fontSize: 12, color: "#FF6B6B", lineHeight: 1.5 }}>{photoError}</div>}
         </div>
-        <button onClick={() => canSubmit && onSubmit(info)} disabled={!canSubmit} style={{ ...gBtn, marginTop: 6, opacity: canSubmit ? 1 : 0.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+        <button onClick={(e) => { e.preventDefault(); canSubmit && onSubmit(info); }} disabled={!canSubmit} style={{ ...gBtn, marginTop: 6, opacity: canSubmit ? 1 : 0.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
           <SpongeBob size={28} />AI 生成我的专属方案
         </button>
       </div>
