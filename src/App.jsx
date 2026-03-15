@@ -168,25 +168,28 @@ const OnboardForm = memo(({ onSubmit }) => {
   const card = { background: "rgba(255,255,255,0.07)", backdropFilter: "blur(20px)", borderRadius: 18, border: "1px solid rgba(255,255,255,0.1)" };
   const canSubmit = info.age && info.height && info.weight && info.goal && !photoChecking;
 
-  async function handlePhoto(e) {
+  function handlePhoto(e) {
     const f = e.target.files[0];
     if (!f) return;
     setPhotoError("");
-    setPhotoChecking(true);
     const r = new FileReader();
-    r.onload = async ev => {
-      const data = ev.target.result;
-      const isBody = await validatePhoto(data);
-      if (isBody) {
-        setInfo(p => ({ ...p, photo: data }));
-        setPhotoError("");
-      } else {
-        setInfo(p => ({ ...p, photo: null }));
-        setPhotoError("❌ 这张照片看起来不是身材照，请上传能看到身体的全身或半身照");
-      }
-      setPhotoChecking(false);
-    };
+    r.onload = ev => setInfo(p => ({ ...p, photo: ev.target.result }));
     r.readAsDataURL(f);
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!canSubmit) return;
+    if (info.photo) {
+      setPhotoChecking(true);
+      const isBody = await validatePhoto(info.photo);
+      setPhotoChecking(false);
+      if (!isBody) {
+        setPhotoError("❌ 这张照片不是身材照，请上传能看到身体的全身或半身照");
+        return;
+      }
+    }
+    onSubmit(info);
   }
   return (
     <div style={{ padding: "30px 20px 20px" }}>
@@ -249,18 +252,16 @@ const OnboardForm = memo(({ onSubmit }) => {
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>身材照片（可选，AI会分析体型）</div>
           <label style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, border: `1.5px dashed ${photoError ? "rgba(255,100,100,0.6)" : "rgba(255,255,255,0.2)"}`, cursor: "pointer", background: "rgba(255,255,255,0.05)" }}>
             <input type="file" accept="image/*" style={{ display: "none" }} onChange={handlePhoto} />
-            {photoChecking ? (
-              <><div style={{ width: 48, height: 48, borderRadius: 10, background: "rgba(255,215,0,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>🧽</div><span style={{ fontSize: 13, color: "#FFD700" }}>正在验证照片...</span></>
-            ) : info.photo ? (
-              <><img src={info.photo} style={{ width: 48, height: 48, borderRadius: 10, objectFit: "cover" }} alt="" /><span style={{ fontSize: 13, color: "#FFD700" }}>照片已上传 ✓</span></>
+            {info.photo ? (
+              <><img src={info.photo} style={{ width: 48, height: 48, borderRadius: 10, objectFit: "cover" }} alt="" /><span style={{ fontSize: 13, color: "#FFD700" }}>照片已上传，点击生成时会验证 ✓</span></>
             ) : (
               <><div style={{ width: 48, height: 48, borderRadius: 10, background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>📷</div><span style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>点击上传全身或半身照</span></>
             )}
           </label>
           {photoError && <div style={{ marginTop: 6, fontSize: 12, color: "#FF6B6B", lineHeight: 1.5 }}>{photoError}</div>}
         </div>
-        <button onClick={(e) => { e.preventDefault(); canSubmit && onSubmit(info); }} disabled={!canSubmit} style={{ ...gBtn, marginTop: 6, opacity: canSubmit ? 1 : 0.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-          <SpongeBob size={28} />AI 生成我的专属方案
+        <button onClick={handleSubmit} disabled={!canSubmit} style={{ ...gBtn, marginTop: 6, opacity: canSubmit ? 1 : 0.5, display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          <SpongeBob size={28} />{photoChecking ? "验证照片中..." : "AI 生成我的专属方案"}
         </button>
       </div>
     </div>
